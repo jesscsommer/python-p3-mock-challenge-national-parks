@@ -1,43 +1,36 @@
-class NationalPark:
+class NationalPark: 
 
     def __init__(self, name):
-        self.name = name
-        self._trips = []
-        self._visitors = set()
-        
-    def trips(self, new_trip=None):
-        from classes.trip import Trip
-        if isinstance(new_trip, Trip):
-            self._trips.append(new_trip)
-        return self._trips
-    
-    def visitors(self, new_visitor=None):
-        from classes.visitor import Visitor
-        if isinstance(new_visitor, Visitor):
-            self._visitors.add(new_visitor)
-        return list(self._visitors)
-    
-    def total_visits(self):
-        return len(self._trips)
-    
-    def best_visitor(self):
-        most_visits = 0
-        best_visitor = None
-        for visitor in self._visitors:
-            count = len([trip for trip in self._trips if trip.visitor == visitor])
-            if count and count > most_visits:
-                most_visits = count
-                best_visitor = visitor
-        return best_visitor
+        self.name = name 
 
-    # Properties 
-    @property
+    # Properties
+    @property 
     def name(self):
         return self._name
     
     @name.setter
     def name(self, name):
-        if not hasattr(self, "name") and type(name) == str:
-            self._name = name
+        if (isinstance(name, str)
+            and not hasattr(self, "_name")):
+            self._name = name 
         else: 
-            raise Exception 
+            raise Exception("Name must be a string; name cannot be changed")
+    
+    # Instance methods
+    def trips(self):
+        return [trip for trip in Trip.all if trip.national_park is self]
+    
+    def visitors(self):
+        return list({trip.visitor for trip in self.trips()})
+    
+    # Aggregate and assocation methods
+    def total_visits(self):
+        return len(self.trips())
+    
+    def best_visitor(self):
+        visit_counts = [(visitor, visitor.count_park_trips(self)) 
+                        for visitor in self.visitors()]
+        visit_counts.sort(key=lambda t: t[1], reverse=True)
+        return visit_counts[0][0] if visit_counts else "No visits"
+
+from classes.trip import Trip
